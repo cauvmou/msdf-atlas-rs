@@ -5,6 +5,6 @@ COPY . .
 
 RUN apt-get update -y
 RUN apt-get upgrade -y
-RUN apt-get install -y cmake
+RUN apt-get install -y cmake clang
 
 RUN cargo build -r
