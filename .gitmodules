@@ -1,3 +1,6 @@
 [submodule "msdf-atlas-sys/msdf-atlas-gen"]
 	path = msdf-atlas-sys/msdf-atlas-gen
 	url = https://github.com/Chlumsky/msdf-atlas-gen
+[submodule "msdf-atlas-sys/vcpkg"]
+	path = msdf-atlas-sys/vcpkg
+	url = https://github.com/microsoft/vcpkg.git

@@ -32,9 +32,9 @@ fn main() {
 
     let mut cmake_builder = Config::new(&msdf_atlas_gen_dir);
     cmake_builder.build_target("msdf-atlas-gen");
-    cmake_builder.define("MSDF_ATLAS_NO_ARTERY_FONT", "ON");
-    cmake_builder.define("MSDF_ATLAS_USE_VCPKG", "OFF");
-    // TODO: tinyxml12 is a fucking bitch.
+    cmake_builder.define("MSDF_ATLAS_BUILD_STANDALONE", "OFF");
+    cmake_builder.define("MSDF_ATLAS_USE_SKIA", "OFF");
+    cmake_builder.env("VCPKG_ROOT", "./vcpkg");
     cmake_builder.profile("Release");
 
     println!("cargo:rerun-if-changed=wrapper.h");
