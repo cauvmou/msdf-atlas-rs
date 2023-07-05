@@ -7,3 +7,4 @@ edition = "2021"
 crate-type = ["rlib"]
 
 [dependencies]
+msdf-atlas-sys = { path = "../msdf-atlas-sys" }

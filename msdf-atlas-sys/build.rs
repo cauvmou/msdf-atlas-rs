@@ -1,9 +1,12 @@
 use std::io::Write;
+use std::str::Utf8Error;
+use std::string::FromUtf8Error;
 use std::{env};
 use std::fs::{remove_dir_all, OpenOptions};
 use std::path::{PathBuf};
 use cmake::Config;
 use fs_extra::dir::{copy, CopyOptions};
+use regex::Regex;
 
 fn main() {
     let out = PathBuf::from(env::var("OUT_DIR").unwrap());
@@ -63,16 +66,63 @@ fn main() {
         .opaque_type("std::.*")
         .allowlist_type("msdfgen::.*")
         .allowlist_function("msdfgen::.*")
-        // TODO: Make correct allowlist: .allowlist_type("msdf-atlas-gen::.*")
-        // TODO: Make correct allowlist: .allowlist_function("msdf-atlas-gen::.*")
+        .allowlist_file(".*/msdf-atlas-gen/[^/]+\\.h")
         .header("wrapper.h")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()
         .expect("Unable to generate bindings");
 
+    let mut replacer = Replacer::new();
     bindings
-        .write_to_file("./src/bindings.rs")
+        .write(Box::new(&mut replacer)) 
+        .expect("Couldn't write bindings to replacer!");
+    replacer
+        .convert()
+        .expect("Couldn't convert to Utf8!")
+        .replace("pub type msdf_atlas_GeneratorFunction", "pub type msdf_atlas_GeneratorFunction<T>").unwrap()
+        .write_to_file(out.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+    ;
+}
+
+struct Replacer {
+    buf: Vec<u8>,
+    inner: String,
+}
+
+impl Write for Replacer {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.buf.append(&mut buf.to_vec());
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+impl Replacer {
+    pub fn new() -> Self {
+        Self {
+            buf: Vec::with_capacity(65535),
+            inner: String::new(),
+        }
+    }
+
+    pub fn convert(&mut self) -> Result<&mut Self, FromUtf8Error> {
+        self.inner = String::from_utf8(self.buf.clone())?;
+        Ok(self)
+    }
+
+    pub fn replace(&mut self, regex: &str, rep: &str) -> Result<&mut Self, regex::Error> {
+        self.inner = Regex::new(regex)?.replace(&self.inner, rep).to_string();
+        Ok(self)
+    }
+
+    pub fn write_to_file(&self, path: PathBuf) -> std::io::Result<()>{
+        std::fs::write(path, self.inner.as_bytes())?;
+        Ok(())
+    }
 }
 
 #[allow(dead_code)]

@@ -3,9 +3,11 @@
 #![allow(non_snake_case)]
 
 #[allow(clippy::all)]
-mod bindings;
+mod sys {
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
 
-use bindings::*;
+use sys::*;
 
 #[cfg(test)]
 mod test {
