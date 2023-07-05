@@ -2,7 +2,7 @@ use cmake::Config;
 use fs_extra::dir::{copy, CopyOptions};
 use regex::Regex;
 use std::env;
-use std::fs::{remove_dir_all, OpenOptions};
+use std::fs::{remove_dir_all};
 use std::io::Write;
 use std::path::PathBuf;
 use std::string::FromUtf8Error;
@@ -20,17 +20,6 @@ fn main() {
 
     copy("msdf-atlas-gen", &msdf_atlas_gen_dir, &options).unwrap();
 
-    let cmake_lists = msdf_atlas_gen_dir.join("CMakeLists.txt");
-
-    let contents = std::fs::read_to_string(&cmake_lists).unwrap();
-
-    OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(&cmake_lists)
-        .unwrap()
-        .write_all(contents.as_bytes())
-        .unwrap();
     let mut cmake_builder = Config::new(&msdf_atlas_gen_dir);
     cmake_builder.build_target("msdf-atlas-gen");
     cmake_builder.define("MSDF_ATLAS_BUILD_STANDALONE", "OFF");
@@ -39,6 +28,8 @@ fn main() {
 
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rustc-link-lib=static=msdf-atlas-gen");
+    println!("cargo:rustc-link-lib=static=msdfgen");
+    println!("cargo:rustc-link-lib=static=msdfgen-ext");
 
     let dst = cmake_builder.build();
 
@@ -47,9 +38,15 @@ fn main() {
             "cargo:rustc-link-search=native={}/build/Release",
             dst.display()
         );
+        println!(
+            "cargo:rustc-link-search=native={}/build/Release/msdfgen",
+            dst.display()
+        );
     } else {
         println!("cargo:rustc-link-search=native={}/build", dst.display());
+        println!("cargo:rustc-link-search=native={}/build/msdfgen", dst.display());
         println!("cargo:rustc-link-lib=dylib=stdc++");
+        println!("cargo:rustc-link-lib=dylib=freetype");
     }
 
     let bindings = bindgen::Builder::default()
