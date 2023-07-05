@@ -1,12 +1,11 @@
-use std::io::Write;
-use std::str::Utf8Error;
-use std::string::FromUtf8Error;
-use std::{env};
-use std::fs::{remove_dir_all, OpenOptions};
-use std::path::{PathBuf};
 use cmake::Config;
 use fs_extra::dir::{copy, CopyOptions};
 use regex::Regex;
+use std::env;
+use std::fs::{remove_dir_all, OpenOptions};
+use std::io::Write;
+use std::path::PathBuf;
+use std::string::FromUtf8Error;
 
 fn main() {
     let out = PathBuf::from(env::var("OUT_DIR").unwrap());
@@ -38,14 +37,10 @@ fn main() {
     cmake_builder.env("VCPKG_ROOT", "./vcpkg");
     cmake_builder.profile("Release");
 
-    // debug_print(format!("{msdf_atlas_gen_dir:?}"));
-
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rustc-link-lib=static=msdf-atlas-gen");
 
     let dst = cmake_builder.build();
-    
-    // debug_print(format!("{dst:?}"));
 
     if cfg!(target_env = "msvc") {
         println!(
@@ -56,7 +51,6 @@ fn main() {
         println!("cargo:rustc-link-search=native={}/build", dst.display());
         println!("cargo:rustc-link-lib=dylib=stdc++");
     }
-
 
     let bindings = bindgen::Builder::default()
         .clang_arg("-Imsdf-atlas-gen")
@@ -74,15 +68,18 @@ fn main() {
 
     let mut replacer = Replacer::new();
     bindings
-        .write(Box::new(&mut replacer)) 
+        .write(Box::new(&mut replacer))
         .expect("Couldn't write bindings to replacer!");
     replacer
         .convert()
         .expect("Couldn't convert to Utf8!")
-        .replace("pub type msdf_atlas_GeneratorFunction", "pub type msdf_atlas_GeneratorFunction<T>").unwrap()
+        .replace(
+            "pub type msdf_atlas_GeneratorFunction",
+            "pub type msdf_atlas_GeneratorFunction<T>",
+        )
+        .unwrap()
         .write_to_file(out.join("bindings.rs"))
         .expect("Couldn't write bindings!");
-    ;
 }
 
 struct Replacer {
@@ -119,16 +116,8 @@ impl Replacer {
         Ok(self)
     }
 
-    pub fn write_to_file(&self, path: PathBuf) -> std::io::Result<()>{
+    pub fn write_to_file(&self, path: PathBuf) -> std::io::Result<()> {
         std::fs::write(path, self.inner.as_bytes())?;
         Ok(())
-    }
-}
-
-#[allow(dead_code)]
-fn debug_print(s: String) {
-    match std::fs::read_to_string("./debug.log") {
-        Ok(content) => std::fs::write("./debug.log", format!("{content}\n{s}")).unwrap(),
-        Err(_) => std::fs::write("./debug.log", s).unwrap(),
     }
 }
