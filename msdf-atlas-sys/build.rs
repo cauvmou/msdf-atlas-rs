@@ -61,15 +61,17 @@ fn main() {
         .clang_arg("-x")
         .clang_arg("c++")
         .opaque_type("std::.*")
-        .allowlist_type("msdf-atlas-gen::.*")
-        .allowlist_function("msdf-atlas-gen::.*")
+        .allowlist_type("msdfgen::.*")
+        .allowlist_function("msdfgen::.*")
+        // TODO: Make correct allowlist: .allowlist_type("msdf-atlas-gen::.*")
+        // TODO: Make correct allowlist: .allowlist_function("msdf-atlas-gen::.*")
         .header("wrapper.h")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()
         .expect("Unable to generate bindings");
 
     bindings
-        .write_to_file(out.join("bindings.rs"))
+        .write_to_file("./src/bindings.rs")
         .expect("Couldn't write bindings!");
 }
 

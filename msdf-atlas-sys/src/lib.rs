@@ -3,11 +3,9 @@
 #![allow(non_snake_case)]
 
 #[allow(clippy::all)]
-mod sys {
-    // to make clippy happy
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}
-pub use sys::*;
+mod bindings;
+
+use bindings::*;
 
 #[cfg(test)]
 mod test {
